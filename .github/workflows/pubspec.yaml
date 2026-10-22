@@ -1,0 +1,494 @@
+name: zeed_net
+description: ZEED NET - إدارة شبكة ومحاسبة
+version: 1.0.0+1
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  path_provider: ^2.1.1
+  intl: ^0.18.1
+  shared_preferences: ^2.2.2
+  share_plus: ^7.2.1
+  file_picker: ^6.1.1
+  excel: ^4.0.2
+  url_launcher: ^6.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'theme/app_theme.dart';
+import 'screens/home_screen.dart';
+
+void main() {
+  runApp(const ZeedNetApp());
+}
+
+class ZeedNetApp extends StatelessWidget {
+  const ZeedNetApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'زيد نت — ZEED NET',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.darkGold(),
+      locale: const Locale('ar', 'SY'),
+      supportedLocales: const [Locale('ar', 'SY')],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      builder: (ctx, child) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: child!,
+      ),
+      home: const HomeScreen(),
+    );
+  }
+  import 'package:flutter/material.dart';
+
+class AppColors {
+  static const darkBg = Color(0xFF0F0F1A);
+  static const cardBg = Color(0xFF1A1A2E);
+  static const gold = Color(0xFFD4AF37);
+  static const goldLight = Color(0xFFF0D97A);
+  static const textLight = Color(0xFFF5F5F5);
+  static const textGrey = Color(0xFF9E9E9E);
+  static const success = Color(0xFF2ECC71);
+  static const danger = Color(0xFFE74C3C);
+  static const warning = Color(0xFFF39C12);
+}
+
+class AppTheme {
+  static ThemeData darkGold() {
+    return ThemeData(
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: AppColors.darkBg,
+      primaryColor: AppColors.gold,
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.gold,
+        secondary: AppColors.goldLight,
+        surface: AppColors.cardBg,
+        error: AppColors.danger,
+      ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: AppColors.darkBg,
+        foregroundColor: AppColors.gold,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          color: AppColors.gold,
+        ),
+      ),
+      cardTheme: CardTheme(
+        color: AppColors.cardBg,
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.gold, width: 0.5),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.gold,
+          foregroundColor: AppColors.darkBg,
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.darkBg,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.gold, width: 0.5),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.gold, width: 1.5),
+        ),
+        labelStyle: const TextStyle(color: AppColors.textGrey),
+      ),
+    );
+  }
+}
+[1:09 م، 2026/10/22] MOSLEH RAGHEB ABO ZIED: import 'package:flutter/material.dart';
+
+class AppColors {
+  static const darkBg = Color(0xFF0F0F1A);
+  static const cardBg = Color(0xFF1A1A2E);
+  static const gold = Color(0xFFD4AF37);
+  static const goldLight = Color(0xFFF0D97A);
+  static const textLight = Color(0xFFF5F5F5);
+  static const textGrey = Color(0xFF9E9E9E);
+  static const success = Color(0xFF2ECC71);
+  static const danger = Color(0xFFE74C3C);
+  static const warning = Color(0xFFF39C12);
+}
+
+class AppTheme {
+  static ThemeData darkGold() {
+    return ThemeData(
+      brightness: Brightness.dark,
+      scaffoldBackgroundColor: AppColors.darkBg,
+      primaryColor: AppColors.gold,
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.gold,
+        secondary: AppColors.goldLight,
+    …
+[1:10 م، 2026/10/22] MOSLEH RAGHEB ABO ZIED: import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+
+class DBHelper {
+  static final DBHelper instance = DBHelper._();
+  DBHelper._();
+
+  Database? _db;
+
+  Future<Database> get database async {
+    if (_db != null) return _db!;
+    _db = await _initDB();
+    return _db!;
+  }
+
+  Future<Database> _initDB() async {
+    final path = join(await getDatabasesPath(), 'zeed_net.db');
+    return openDatabase(
+      path,
+      version: 1,
+      onCreate: _createTables,
+    );
+  }
+
+  Future<void> _createTables(Database db, int version) async {
+    await db.execute('''
+      CREATE TABLE subscribers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        username TEXT,
+        password TEXT,
+        packageId INTEGER,
+        packageName TEXT,
+        packagePrice REAL,
+        subscribeDate TEXT,
+        expireDate TEXT,
+        isPaid INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'active',
+        notes TEXT,
+        createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE packages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        price REAL NOT NULL,
+        durationDays INTEGER NOT NULL,
+        speed TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        subscriberId INTEGER,
+        amount REAL NOT NULL,
+        date TEXT NOT NULL,
+        note TEXT,
+        FOREIGN KEY(subscriberId) REFERENCES subscribers(id)
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE expenses (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        amount REAL NOT NULL,
+        date TEXT NOT NULL,
+        note TEXT
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+      )
+    ''');
+
+    await db.insert('packages', {
+      'name': 'شهري', 'price': 25000, 'durationDays': 30, 'speed': '4 Mbps',
+    });
+    await db.insert('packages', {
+      'name': '3 أشهر', 'price': 70000, 'durationDays': 90, 'speed': '4 Mbps',
+    });
+    await db.insert('packages', {
+      'name': '6 أشهر', 'price': 130000, 'durationDays': 180, 'speed': '4 Mbps',
+    });
+  }
+
+  Future<int> countSubscribers() async {
+    final db = await database;
+    final r = await db.rawQuery('SELECT COUNT(*) as c FROM subscribers');
+    return Sqflite.firstIntValue(r) ?? 0;
+  }
+
+  Future<int> countByStatus(String status) async {
+    final db = await database;
+    final r = await db.rawQuery(
+      'SELECT COUNT(*) as c FROM subscribers WHERE status = ?', [status]);
+    return Sqflite.firstIntValue(r) ?? 0;
+  }
+
+  Future<double> sumPaymentsThisMonth() async {
+    final db = await database;
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, 1).toIso8601String();
+    final r = await db.rawQuery(
+      'SELECT COALESCE(SUM(amount),0) as s FROM payments WHERE date >= ?',
+      [start]);
+    return (r.first['s'] as num?)?.toDouble() ?? 0;
+  }
+
+  Future<double> sumExpensesThisMonth() async {
+    final db = await database;
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, 1).toIso8601String();
+    final r = await db.rawQuery(
+      'SELECT COALESCE(SUM(amount),0) as s FROM expenses WHERE date >= ?',
+      [start]);
+    return (r.first['s'] as num?)?.toDouble() ?? 0;
+  }
+
+  Future<double> totalDebts() async {
+    final db = await database;
+    final r = await db.rawQuery(
+      "SELECT COALESCE(SUM(packagePrice),0) as s FROM subscribers WHERE isPaid = 0");
+    return (r.first['s'] as num?)?.toDouble() ?? 0;
+  }
+
+  Future<List<Map<String, dynamic>>> expiredSubscribers() async {
+    final db = await database;
+    final today = DateTime.now().toIso8601String().substring(0, 10);
+    return db.query(
+      'subscribers',
+      where: "expireDate < ? AND status = 'active'",
+      whereArgs: [today],
+    );
+  }
+}import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../theme/app_theme.dart';
+import '../database/db_helper.dart';
+import '../widgets/stat_card.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int total = 0, active = 0, stopped = 0;
+  double revenue = 0, debts = 0, expenses = 0;
+  int expired = 0;
+  bool loading = true;
+
+  final fmt = NumberFormat.currency(
+      locale: 'ar_SY', symbol: 'ل.س', decimalDigits: 0);
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final db = DBHelper.instance;
+    total = await db.countSubscribers();
+    active = await db.countByStatus('active');
+    stopped = await db.countByStatus('stopped');
+    revenue = await db.sumPaymentsThisMonth();
+    expenses = await db.sumExpensesThisMonth();
+    debts = await db.totalDebts();
+    expired = (await db.expiredSubscribers()).length;
+    setState(() => loading = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profit = revenue - expenses;
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('زيد نت — ZEED NET'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: AppColors.gold),
+            onPressed: () { setState(() => loading = true); _load(); },
+          ),
+        ],
+      ),
+      body: loading
+        ? const Center(child: CircularProgressIndicator(color: AppColors.gold))
+        : RefreshIndicator(
+            onRefresh: _load,
+            color: AppColors.gold,
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        const Text('إجمالي المشتركين',
+                          style: TextStyle(color: AppColors.textGrey, fontSize: 14)),
+                        const SizedBox(height: 6),
+                        Text('$total',
+                          style: const TextStyle(
+                            color: AppColors.gold, fontSize: 36,
+                            fontWeight: FontWeight.bold)),
+                        const Divider(color: Colors.white24),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _statusChip('نشط', active, AppColors.success),
+                            _statusChip('متوقف', stopped, AppColors.danger),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                if (expired > 0)
+                  Card(
+                    color: AppColors.danger.withOpacity(0.15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      side: const BorderSide(color: AppColors.danger),
+                    ),
+                    child: ListTile(
+                      leading: const Icon(Icons.warning_amber, color: AppColors.danger),
+                      title: Text('$expired اشتراك منتهٍ',
+                        style: const TextStyle(color: AppColors.danger)),
+                      subtitle: const Text('اضغط لعرض المشتركين',
+                        style: TextStyle(color: AppColors.textGrey)),
+                      trailing: const Icon(Icons.arrow_forward_ios,
+                        size: 14, color: AppColors.danger),
+                      onTap: () {},
+                    ),
+                  ),
+                const SizedBox(height: 12),
+                GridView.count(
+                  crossAxisCount: 2,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1.25,
+                  children: [
+                    StatCard(
+                      title: 'إيرادات الشهر',
+                      value: fmt.format(revenue),
+                      icon: Icons.trending_up,
+                      color: AppColors.success,
+                    ),
+                    StatCard(
+                      title: 'المصروفات',
+                      value: fmt.format(expenses),
+                      icon: Icons.trending_down,
+                      color: AppColors.danger,
+                    ),
+                    StatCard(
+                      title: 'الديون المتراكمة',
+                      value: fmt.format(debts),
+                      icon: Icons.account_balance_wallet,
+                      color: AppColors.warning,
+                    ),
+                    StatCard(
+                      title: 'صافي الربح',
+                      value: fmt.format(profit),
+                      icon: Icons.savings,
+                      color: profit >= 0 ? AppColors.gold : AppColors.danger,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  Widget _statusChip(String label, int count, Color color) {
+    return Column(
+      children: [
+        Text('$count', style: TextStyle(color: color,
+          fontSize: 22, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
+      ],
+    );
+  }
+}import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
+
+class StatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const StatCard({
+    super.key,
+    required this.title, required this.value,
+    required this.icon, required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withOpacity(0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(icon, color: color, size: 26),
+          Text(value,
+            maxLines: 1, overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: color, fontSize: 18,
+              fontWeight: FontWeight.bold)),
+          Text(title,
+            style: const TextStyle(color: AppColors.textGrey, fontSize: 11)),
+        ],
+      ),
+    );
+  }
+}
